@@ -43,7 +43,8 @@ def send_mail(send_from, send_to, subject, text, files=[], server=email_smtp_ser
 
     msg = MIMEMultipart()
     msg['From'] = send_from
-    msg['To'] = ', '.join(send_to)
+    # Basically BCC the messages by leaving this out.
+    # msg['To'] = ', '.join(send_to)
     msg['Date'] = formatdate(localtime=True)
     msg['Subject'] = subject
 
