@@ -140,7 +140,7 @@ def main():
                     os.rename(saved_name, new_name)
                     # And send everyone a copy
                     print("Sending emails!")
-                    send_mail(email_address, subscribers, email_subject, "", files=[new_name])
+                    send_mail(email_address, subscribers, email_subject + " - Update!", "", files=[new_name])
                 else:
                     os.unlink(saved_name)
             except URLError:
