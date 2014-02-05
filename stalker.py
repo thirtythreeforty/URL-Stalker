@@ -143,28 +143,31 @@ def main():
                     send_mail(email_address, subscribers, email_subject + " - Update!", "", files=[new_name])
                 else:
                     os.unlink(saved_name)
-            except URLError:
+            except:
                 pass
             for i in range(10):
-            # Check for new subscribers
-                tasks = get_mail_subjects(email_imap_server, email_address, email_password)
-                for (task, address) in tasks:
-                    task = task.lower().strip()
-                    if task == "unsubscribe":
-                        print("Unsubscribing", address)
-                        subscribers = list(filter(lambda a: a != address, subscribers))
-                        send_mail(email_address, [address], email_subject + " - Unsubscribed!",
-                                  "You are now unsubscribed!")
-                    elif task == "subscribe":
-                        print("Subscribing", address)
-                        subscribers.append(address)
-                        send_mail(email_address, [address], email_subject + " - Subscribed!",
-                                  "You are now subscribed!  Send a similar message saying UNSUBSCRIBE to cancel.\nSysadmin:\n"+sysadmin_name+'\n'+sysadmin_email,
-                                  files=[currentfilename])
-                    else:
-                        send_mail(email_address, [address], email_subject + " - Huh?", "Valid subjects are SUBSCRIBE and UNSUBSCRIBE.  Messages must have an empty body.")
-                    # And sleep
-                    time.sleep(wait_time)
+                try:
+                    # Check for new subscribers
+                    tasks = get_mail_subjects(email_imap_server, email_address, email_password)
+                    for (task, address) in tasks:
+                        task = task.lower().strip()
+                        if task == "unsubscribe":
+                            print("Unsubscribing", address)
+                            subscribers = list(filter(lambda a: a != address, subscribers))
+                            send_mail(email_address, [address], email_subject + " - Unsubscribed!",
+                                    "You are now unsubscribed!")
+                        elif task == "subscribe":
+                            print("Subscribing", address)
+                            subscribers.append(address)
+                            send_mail(email_address, [address], email_subject + " - Subscribed!",
+                                    "You are now subscribed!  Send a similar message saying UNSUBSCRIBE to cancel.\nSysadmin:\n"+sysadmin_name+'\n'+sysadmin_email,
+                                    files=[currentfilename])
+                        else:
+                            send_mail(email_address, [address], email_subject + " - Huh?", "Valid subjects are SUBSCRIBE and UNSUBSCRIBE.  Messages must have an empty body.")
+                except:
+                    pass
+                # And sleep
+                time.sleep(wait_time)
     except KeyboardInterrupt:
         with open('hash.txt', 'w') as f:
             f.write(currenthash + '\n')
