@@ -149,7 +149,7 @@ def main():
             # Check for new subscribers
                 tasks = get_mail_subjects(email_imap_server, email_address, email_password)
                 for (task, address) in tasks:
-                    task = task.lower()
+                    task = task.lower().strip()
                     if task == "unsubscribe":
                         print("Unsubscribing", address)
                         subscribers = list(filter(lambda a: a != address, subscribers))
