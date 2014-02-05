@@ -37,14 +37,15 @@ from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email.utils import formatdate
 from email import encoders as Encoders
-def send_mail(send_from, send_to, subject, text, files=[], server=email_smtp_server):
+def send_mail(send_from, send_to, subject, text, files=[], server=email_smtp_server, hide=False):
     assert type(send_to)==list
     assert type(files)==list
 
     msg = MIMEMultipart()
     msg['From'] = send_from
-    # Basically BCC the messages by leaving this out.
-    # msg['To'] = ', '.join(send_to)
+    if not hide:
+        # Basically BCC the messages by leaving this out.
+        msg['To'] = ', '.join(send_to)
     msg['Date'] = formatdate(localtime=True)
     msg['Subject'] = subject
 
@@ -140,7 +141,7 @@ def main():
                     os.rename(saved_name, new_name)
                     # And send everyone a copy
                     print("Sending emails!")
-                    send_mail(email_address, subscribers, email_subject + " - Update!", "", files=[new_name])
+                    send_mail(email_address, subscribers, email_subject + " - Update!", "", files=[new_name], hide=True)
                 else:
                     os.unlink(saved_name)
             except:
