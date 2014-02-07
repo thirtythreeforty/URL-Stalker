@@ -7,6 +7,7 @@ performed by sending it pithy messages over email.
 Pull requests and bug reports are welcome.  I'll update this as I need it, but it's 
 otherwise not being actively developed.
 
+# Setup
 To set it up, check the source code out into a directory somewhere, then edit 
 `settings.py` to your satisfaction.  You will need to provide it an email address with
 SMTP and IMAP access.  Gmail works well (in fact, this isn't tested with anything 
@@ -27,3 +28,8 @@ Email specific settings are:
 
 You should also fill out the `sysadmin_name` and `sysadmin_email` fields so people 
 can contact you if the need arises.
+
+# Use
+Send a blank email with the subject `SUBSCRIBE` to the configured address; your 
+address will be added to the mailing list.  Likewise, send `UNSUBSCRIBE` to have your 
+name removed.
