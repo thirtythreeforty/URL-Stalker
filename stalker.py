@@ -99,7 +99,9 @@ def main():
                             mailutils.send_mail(email_address,
                                                 [address],
                                                 email_subject + " - Subscribed!",
-                                                "You are now subscribed!  Send a similar message saying UNSUBSCRIBE to cancel.\n\nSysadmin:\n"+sysadmin_name+'\n'+sysadmin_email,
+                                                "You are now subscribed!  Send a similar message saying UNSUBSCRIBE to cancel." +
+                                                "\n\nSysadmin:\n"+sysadmin_name+'\n'+sysadmin_email +
+                                                "\n\nURL Stalker is open source under the AGPLv3!\nSee github.com/thirtythreeforty/URL-Stalker for the code.",
                                                 email_smtp_server,
                                                 files=[currentfilename])
                         else:
