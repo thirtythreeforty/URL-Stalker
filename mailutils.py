@@ -21,7 +21,7 @@ from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email.utils import formatdate
 from email import encoders as Encoders
-def send_mail(send_from, send_to, subject, text, server, files=[], hide=False):
+def send_mail(send_from, send_to, subject, text, server, password, files=[], hide=False):
     assert type(send_to)==list
     assert type(files)==list
     assert type(hide)==bool

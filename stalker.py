@@ -69,7 +69,7 @@ def main():
                                         subscribers,
                                         email_subject + " - Update!",
                                         "",
-                                        email_smtp_server,
+                                        email_smtp_server, email_password,
                                         files=[new_name],
                                         hide=True)
                 else:
@@ -92,7 +92,7 @@ def main():
                                                 [address],
                                                 email_subject + " - Unsubscribed!",
                                                 "You are now unsubscribed!",
-                                                email_smtp_server)
+                                                email_smtp_server, email_password)
                         elif task == "subscribe":
                             print("Subscribing", address)
                             subscribers.append(address)
@@ -102,14 +102,14 @@ def main():
                                                 "You are now subscribed!  Send a similar message saying UNSUBSCRIBE to cancel." +
                                                 "\n\nSysadmin:\n"+sysadmin_name+'\n'+sysadmin_email +
                                                 "\n\nURL Stalker is open source under the AGPLv3!\nSee github.com/thirtythreeforty/URL-Stalker for the code.",
-                                                email_smtp_server,
+                                                email_smtp_server, email_password,
                                                 files=[currentfilename])
                         else:
                             mailutils.send_mail(email_address,
                                                 [address],
                                                 email_subject + " - Huh?",
                                                 "Valid subjects are SUBSCRIBE and UNSUBSCRIBE.  Messages must have an empty body.",
-                                                email_smtp_server)
+                                                email_smtp_server, email_password)
                     if len(tasks) > 0:
                         saveData(currenthash, currentfilename, subscribers)
                 except:
