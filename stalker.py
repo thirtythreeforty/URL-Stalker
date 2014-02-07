@@ -105,6 +105,13 @@ def md5sum(filename):
             d.update(buf)
     return d.hexdigest()
 
+def saveData(currenthash, currentfilename, subscribers):
+    with open('hash.txt', 'w') as f:
+        f.write(currenthash + '\n')
+        f.write(currentfilename + '\n')
+    with open('users.txt', 'w') as f:
+        for address in subscribers:
+            f.write(address + '\n')
 
 import urllib.request
 import time
@@ -139,6 +146,7 @@ def main():
                     new_name = time.strftime("%Y%m%d-%H%M_", time.gmtime()) + saved_name
                     currentfilename = new_name
                     os.rename(saved_name, new_name)
+                    saveData(currenthash, currentfilename, subscribers)
                     # And send everyone a copy
                     print("Sending emails!")
                     send_mail(email_address, subscribers, email_subject + " - Update!", "", files=[new_name], hide=True)
@@ -151,6 +159,9 @@ def main():
                     # Check for new subscribers
                     tasks = get_mail_subjects(email_imap_server, email_address, email_password)
                     for (task, address) in tasks:
+                        if address == email_address:
+                            # Skip emails from self
+                            continue
                         task = task.lower().strip()
                         if task == "unsubscribe":
                             print("Unsubscribing", address)
@@ -161,22 +172,19 @@ def main():
                             print("Subscribing", address)
                             subscribers.append(address)
                             send_mail(email_address, [address], email_subject + " - Subscribed!",
-                                    "You are now subscribed!  Send a similar message saying UNSUBSCRIBE to cancel.\nSysadmin:\n"+sysadmin_name+'\n'+sysadmin_email,
+                                    "You are now subscribed!  Send a similar message saying UNSUBSCRIBE to cancel.\n\nSysadmin:\n"+sysadmin_name+'\n'+sysadmin_email,
                                     files=[currentfilename])
                         else:
                             send_mail(email_address, [address], email_subject + " - Huh?", "Valid subjects are SUBSCRIBE and UNSUBSCRIBE.  Messages must have an empty body.")
+                    if len(tasks) > 0:
+                        saveData(currenthash, currentfilename, subscribers)
                 except:
                     pass
                 # And sleep
                 time.sleep(wait_time)
     except KeyboardInterrupt:
-        with open('hash.txt', 'w') as f:
-            f.write(currenthash + '\n')
-            f.write(currentfilename + '\n')
-        with open('users.txt', 'w') as f:
-            for address in subscribers:
-                f.write(address + '\n')
-        print("Got Ctrl+C, saved info!")
+        saveData(currenthash, currentfilename, subscribers)
+        print(" Got Ctrl+C, saved info!")
 
 if __name__ == "__main__":
     main()
