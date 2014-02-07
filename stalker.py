@@ -17,6 +17,7 @@
 
 import urllib.request
 import time
+import os
 import mailutils
 import hashutils
 from settings import *
