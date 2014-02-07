@@ -15,97 +15,14 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with URL Stalker.  If not, see <http://www.gnu.org/licenses/>.
 
-# SETTINGS
-# Customize these strings for your setup.
-stalked_file   = ""
-saved_name     = ""
-wait_time      = 60
-
-email_address     = ""
-email_imap_server = ""
-email_smtp_server = ""
-email_password    = ""
-email_subject     = ""
-
-sysadmin_name  = ""
-sysadmin_email = ""
-
-
-import smtplib, os
-from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
-from email.mime.text import MIMEText
-from email.utils import formatdate
-from email import encoders as Encoders
-def send_mail(send_from, send_to, subject, text, files=[], server=email_smtp_server, hide=False):
-    assert type(send_to)==list
-    assert type(files)==list
-
-    msg = MIMEMultipart()
-    msg['From'] = send_from
-    if not hide:
-        # Basically BCC the messages by leaving this out.
-        msg['To'] = ', '.join(send_to)
-    msg['Date'] = formatdate(localtime=True)
-    msg['Subject'] = subject
-
-    msg.attach( MIMEText(text) )
-
-    for f in files:
-        part = MIMEBase('application', "octet-stream")
-        part.set_payload( open(f,"rb").read() )
-        Encoders.encode_base64(part)
-        part.add_header('Content-Disposition', 'attachment; filename="%s"' % os.path.basename(f))
-        msg.attach(part)
-
-    smtp = smtp = smtplib.SMTP_SSL(server, 465)
-    smtp.login(send_from, email_password)
-    smtp.sendmail(send_from, send_to, msg.as_string())
-    smtp.close()
-
-import imaplib
-import email
-def get_mail_subjects(server, user, password):
-    def extract_body(payload):
-        if isinstance(payload,str):
-            return payload
-        else:
-            return '\n'.join([extract_body(part.get_payload()) for part in payload])
-
-    emails = []
-
-    conn = imaplib.IMAP4_SSL(server, 993)
-    conn.login(user, password)
-    conn.select()
-    typ, data = conn.search(None, 'UNSEEN')
-    try:
-        for num in data[0].split():
-            typ, msg_data = conn.fetch(num, '(RFC822)')
-            for response_part in msg_data:
-                if isinstance(response_part, tuple):
-                    msg = email.message_from_string(response_part[1].decode())
-                    s = msg['from']
-                    emails.append((msg['subject'], s[s.rfind("<")+1:s.rfind(">")]))
-            typ, response = conn.store(num, '+FLAGS', r'(\Seen)')
-    finally:
-        try:
-            conn.close()
-        except:
-            pass
-        conn.logout()
-    return emails
-
-
-import hashlib
-from functools import partial
-def md5sum(filename):
-    with open(filename, mode='rb') as f:
-        d = hashlib.md5()
-        for buf in iter(partial(f.read, 128), b''):
-            d.update(buf)
-    return d.hexdigest()
+import urllib.request
+import time
+import mailutils
+import hashutils
+from settings import *
 
 def saveData(currenthash, currentfilename, subscribers):
+    '''Helper function for main()'''
     with open('hash.txt', 'w') as f:
         f.write(currenthash + '\n')
         f.write(currentfilename + '\n')
@@ -113,8 +30,6 @@ def saveData(currenthash, currentfilename, subscribers):
         for address in subscribers:
             f.write(address + '\n')
 
-import urllib.request
-import time
 def main():
     currenthash = ""
     currentfilename = ""
@@ -139,7 +54,7 @@ def main():
             # Download the file
             try:
                 urllib.request.urlretrieve(stalked_file, saved_name)
-                newhash = md5sum(saved_name)
+                newhash = hashutils.md5sum(saved_name)
                 if newhash != currenthash:
                     currenthash = newhash
                     # Keep a copy
@@ -149,7 +64,13 @@ def main():
                     saveData(currenthash, currentfilename, subscribers)
                     # And send everyone a copy
                     print("Sending emails!")
-                    send_mail(email_address, subscribers, email_subject + " - Update!", "", files=[new_name], hide=True)
+                    mailutils.send_mail(email_address,
+                                        subscribers,
+                                        email_subject + " - Update!",
+                                        "",
+                                        email_smtp_server,
+                                        files=[new_name],
+                                        hide=True)
                 else:
                     os.unlink(saved_name)
             except:
@@ -157,7 +78,7 @@ def main():
             for i in range(10):
                 try:
                     # Check for new subscribers
-                    tasks = get_mail_subjects(email_imap_server, email_address, email_password)
+                    tasks = mailutils.get_mail_subjects(email_imap_server, email_address, email_password)
                     for (task, address) in tasks:
                         if address == email_address:
                             # Skip emails from self
@@ -166,16 +87,26 @@ def main():
                         if task == "unsubscribe":
                             print("Unsubscribing", address)
                             subscribers = list(filter(lambda a: a != address, subscribers))
-                            send_mail(email_address, [address], email_subject + " - Unsubscribed!",
-                                    "You are now unsubscribed!")
+                            mailutils.send_mail(email_address,
+                                                [address],
+                                                email_subject + " - Unsubscribed!",
+                                                "You are now unsubscribed!",
+                                                email_smtp_server)
                         elif task == "subscribe":
                             print("Subscribing", address)
                             subscribers.append(address)
-                            send_mail(email_address, [address], email_subject + " - Subscribed!",
-                                    "You are now subscribed!  Send a similar message saying UNSUBSCRIBE to cancel.\n\nSysadmin:\n"+sysadmin_name+'\n'+sysadmin_email,
-                                    files=[currentfilename])
+                            mailutils.send_mail(email_address,
+                                                [address],
+                                                email_subject + " - Subscribed!",
+                                                "You are now subscribed!  Send a similar message saying UNSUBSCRIBE to cancel.\n\nSysadmin:\n"+sysadmin_name+'\n'+sysadmin_email,
+                                                email_smtp_server,
+                                                files=[currentfilename])
                         else:
-                            send_mail(email_address, [address], email_subject + " - Huh?", "Valid subjects are SUBSCRIBE and UNSUBSCRIBE.  Messages must have an empty body.")
+                            mailutils.send_mail(email_address,
+                                                [address],
+                                                email_subject + " - Huh?",
+                                                "Valid subjects are SUBSCRIBE and UNSUBSCRIBE.  Messages must have an empty body.",
+                                                email_smtp_server)
                     if len(tasks) > 0:
                         saveData(currenthash, currentfilename, subscribers)
                 except:
